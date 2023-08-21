@@ -1,0 +1,42 @@
+version: '3'
+services:
+  db:
+    image: postgres:14.0
+    restart: always
+    environment:
+      - POSTGRES_USER=restUser
+      - POSTGRES_PASSWORD=restPassword
+    volumes:
+      - rest_auth_db_data:/var/lib/postgresql/data
+    networks:
+      - rest_auth_tier
+
+  rest_auth:
+    restart: always
+    build: .
+    depends_on:
+      - db
+    command: python manage.py runserver 0.0.0.0:8005
+    environment:
+      - DJANGO_COLLECT_STATIC=off
+      - DJANGO_MANAGEPY_MIGRATE=off
+    links:
+      - db:postgres
+    volumes:
+      - .:/app
+    ports:
+      - "8005:8005"
+    expose:
+      - "8005"
+    networks:
+      - rest_auth_tier
+
+volumes:
+  rest_auth_db_data:
+    driver: local
+  static_volume:
+    driver: local
+
+networks:
+  rest_auth_tier:
+    driver: bridge
